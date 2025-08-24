@@ -3,338 +3,959 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moon Phase Calendar</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Lunar Calendar - Moon Phase Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --moon-glow: 0 0 30px rgba(255, 255, 255, 0.3);
+            --lunar-blue: #3b82f6; /* Tailwind blue-500 */
+            --cosmic-purple: #8b5cf6; /* Tailwind purple-500 */
+            --star-white: #f8fafc; /* Tailwind slate-50 */
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0c0a1f 0%, #1e1b3a 25%, #2d1b69 50%, #1e1b3a 75%, #0c0a1f 100%);
+            background-attachment: fixed;
+            color: var(--star-white); /* Ensure text color is consistent */
         }
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+        
+        .moon-title {
+            font-family: 'Orbitron', monospace;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
         }
-        .animate-pulse-slow {
-            animation: pulse-slow 3s infinite ease-in-out;
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
-        @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
         }
-        .animate-bounce-slow {
-            animation: bounce-slow 2s infinite ease-in-out;
+        
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: var(--moon-glow), 0 0 50px rgba(147, 197, 253, 0.3); }
+            50% { box-shadow: var(--moon-glow), 0 0 80px rgba(147, 197, 253, 0.5); }
         }
-        /* Custom styles for hidden elements, initially hidden by default */
-        .hidden-element {
-            display: none;
+        
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        
+        .animate-twinkle { animation: twinkle 2s infinite ease-in-out; }
+        .animate-float { animation: float 3s infinite ease-in-out; }
+        .animate-glow-pulse { animation: glow-pulse 4s infinite ease-in-out; }
+        .animate-slide-in { animation: slide-in 0.6s ease-out; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .moon-phase-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .moon-phase-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(147, 197, 253, 0.2);
+        }
+        
+        .stellar-bg {
+            position: relative;
+            overflow-x: hidden; /* Prevent horizontal scroll from particles */
+        }
+        
+        .stellar-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 4s infinite;
+            opacity: 0.6;
+        }
+        
+        .lunar-gradient {
+            background: linear-gradient(135deg, var(--lunar-blue), var(--cosmic-purple), #ec4899); /* Tailwind pink-500 */
+        }
+        
+        .phase-info-card {
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(147, 197, 253, 0.3);
+        }
+        
+        .hidden-element { display: none; }
+        .fade-in { opacity: 1; transition: opacity 0.5s ease-in-out; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--lunar-blue), var(--cosmic-purple));
+            border-radius: 4px;
+        }
+
+        /* Moon Visual Specific Styles */
+        .moon-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--star-white); /* Light side of the moon */
+        }
+        .moon-shadow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #2c2c3e; /* Dark side of the moon */
+            transform-origin: center;
+        }
+
+        /* Adjusting for specific phases for visual accuracy */
+        .moon-visual-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #2c2c3e; /* Default dark for new moon */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Inner shadow for depth */
+        }
+        .moon-light-side {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f0f0f0, #c0c0c0); /* Grayscale for moon surface */
+        }
+        .moon-shadow-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark overlay for shadow */
+        }
+
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 text-gray-100 p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-center rounded-lg shadow-2xl">
+<body class="min-h-screen stellar-bg text-white">
+    
+    <!-- Header -->
+    <header class="relative z-10 py-8 text-center">
+        <h1 class="moon-title text-4xl sm:text-6xl lg:text-7xl font-black mb-4 text-transparent bg-clip-text lunar-gradient animate-float">
+            🌙 Lunar Calendar
+        </h1>
+        <p class="text-lg sm:text-xl text-blue-200 font-light max-w-2xl mx-auto px-4">
+            Discover the mystical phases of the moon and unlock celestial wisdom
+        </p>
+        <div class="flex justify-center items-center mt-6 space-x-4">
+            <div class="w-2 h-2 bg-blue-400 rounded-full animate-twinkle"></div>
+            <div class="w-1 h-1 bg-white rounded-full animate-twinkle" style="animation-delay: 0.5s;"></div>
+            <div class="w-2 h-2 bg-purple-400 rounded-full animate-twinkle" style="animation-delay: 1s;"></div>
+        </div>
+    </header>
 
-    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-300 animate-pulse-slow text-center">
-        Moon Phase Calendar 🌕
-    </h1>
-
-    <!-- Today's Moon Phase Section -->
-    <section id="today-moon-phase-section" class="bg-white/10 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-700 w-full max-w-md lg:max-w-2xl mb-10 transform transition-all duration-500 hover:scale-105">
-        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 text-center text-blue-300">
-            Today's Moon Phase
-        </h2>
-        <div id="today-moon-phase-content" class="flex flex-col items-center justify-center space-y-4">
-            <p id="today-date" class="text-lg sm:text-xl font-medium text-gray-300"></p>
-            <div class="relative flex items-center justify-center p-4 bg-gray-900/50 rounded-full shadow-inner">
-                <div id="today-moon-icon"></div>
-                <span class="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs sm:text-sm font-bold text-teal-400 animate-bounce-slow">
-                    Current
-                </span>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        
+        <!-- Current Moon Phase Section -->
+        <section class="mb-12 animate-slide-in">
+            <div class="glass-card rounded-3xl p-8 sm:p-12 max-w-4xl mx-auto animate-glow-pulse">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-blue-200 mb-4">Current Lunar Phase</h2>
+                    <p id="current-date" class="text-xl text-gray-300 font-medium"></p>
+                </div>
+                
+                <div id="current-phase-content" class="flex flex-col lg:flex-row items-center justify-center gap-8">
+                    <!-- Moon Visual -->
+                    <div class="relative">
+                        <div class="w-48 h-48 sm:w-64 sm:h-64 relative">
+                            <div id="current-moon-visual" class="moon-visual-container">
+                                <!-- Moon light and shadow injected here by JS -->
+                            </div>
+                            <div class="absolute -top-4 -right-4 w-8 h-8 bg-yellow-400 rounded-full animate-twinkle opacity-80"></div>
+                            <div class="absolute -bottom-2 -left-6 w-4 h-4 bg-blue-300 rounded-full animate-twinkle" style="animation-delay: 1s;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Phase Information -->
+                    <div class="text-center lg:text-left space-y-4">
+                        <h3 id="current-phase-name" class="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text lunar-gradient"></h3>
+                        <div class="space-y-3">
+                            <p class="text-lg text-gray-300">
+                                <span class="text-blue-300 font-semibold">Illumination:</span> 
+                                <span id="current-illumination" class="text-white font-bold">-</span>
+                            </p>
+                            <p class="text-lg text-gray-300">
+                                <span class="text-purple-300 font-semibold">Age:</span> 
+                                <span id="current-age" class="text-white font-bold">-</span> days
+                            </p>
+                            <p class="text-lg text-gray-300">
+                                <span class="text-pink-300 font-semibold">Next Phase:</span> 
+                                <span id="next-phase" class="text-white font-bold">-</span>
+                            </p>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex flex-wrap gap-4 justify-center lg:justify-start mt-6">
+                            <button id="insight-btn" 
+                                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                                ✨ Moon Insight
+                            </button>
+                            <button id="story-btn"
+                                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300">
+                                📚 Lunar Story
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dynamic Content Area -->
+                <div id="dynamic-content" class="mt-8 space-y-6">
+                    <div id="insight-content" class="phase-info-card rounded-xl p-6 hidden-element">
+                        <h4 class="text-xl font-bold text-blue-300 mb-3 flex items-center gap-2">
+                            <span class="text-2xl">💡</span> Moon Phase Insight
+                        </h4>
+                        <p id="insight-text" class="text-gray-200 leading-relaxed"></p>
+                    </div>
+                    
+                    <div id="story-content" class="phase-info-card rounded-xl p-6 hidden-element">
+                        <h4 class="text-xl font-bold text-purple-300 mb-3 flex items-center gap-2">
+                            <span class="text-2xl">✨</span> Lunar Story
+                        </h4>
+                        <p id="story-text" class="text-gray-200 leading-relaxed italic"></p>
+                    </div>
+                </div>
             </div>
-            <p id="today-moon-name" class="text-xl sm:text-2xl font-bold text-center text-purple-200"></p>
-            <button id="generate-insight-btn"
-                class="mt-4 px-6 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-300 active:scale-95"
-                disabled>
-                Moon Phase Insight ✨
-            </button>
-            <p id="moon-phase-insight" class="mt-4 text-md text-center text-gray-200 bg-gray-800/60 p-4 rounded-lg italic border border-yellow-600 hidden-element"></p>
-        </div>
-        <p id="loading-today-phase" class="text-center text-gray-400">Loading moon phase...</p>
-    </section>
+        </section>
 
-    <!-- Next 7 Days Feature Button -->
-    <button id="show-next-7-days-btn"
-        class="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-lg rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-300 active:scale-95 mb-6">
-        Show Next 7 Days 📅
-    </button>
-
-    <!-- Next 7 Days Moon Phases Section -->
-    <section id="next-7-days-section" class="mt-10 bg-white/10 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-700 w-full max-w-md lg:max-w-4xl transform transition-all duration-500 hover:scale-[1.01] mb-10 hidden-element">
-        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 text-center text-blue-300">
-            Next 7 Days Moon Phases
-        </h2>
-        <div id="next-7-days-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-            <!-- Moon phases for next 7 days will be injected here -->
-        </div>
-        <div class="flex justify-center mt-8">
-            <button id="hide-next-7-days-btn"
-                class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-full shadow-md transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-gray-400 active:scale-95">
-                Hide 👆
+        <!-- Weekly Forecast Toggle -->
+        <div class="text-center mb-8">
+            <button id="toggle-forecast-btn"
+                class="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold text-xl rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-300">
+                🔮 View 7-Day Lunar Forecast
             </button>
         </div>
-    </section>
 
-    <!-- Moon Phase Story Section (LLM Feature) -->
-    <section id="moon-phase-story-section" class="bg-white/10 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-700 w-full max-w-md lg:max-w-2xl mt-6 transform transition-all duration-500 hover:scale-105">
-        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 text-center text-pink-300">
-            Moon Phase Story
-        </h2>
-        <div class="flex flex-col items-center justify-center space-y-4">
-            <p class="text-lg sm:text-xl font-medium text-gray-300 text-center">
-                Generate a short, enchanting story inspired by the current moon phase!
-            </p>
-            <button id="generate-story-btn"
-                class="mt-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-300 active:scale-95"
-                disabled>
-                Moon Phase Story ✨
-            </button>
-            <p id="moon-phase-story" class="mt-4 text-md text-center text-gray-200 bg-gray-800/60 p-4 rounded-lg italic border border-pink-600 hidden-element"></p>
-        </div>
-    </section>
+        <!-- 7-Day Forecast Section -->
+        <section id="forecast-section" class="hidden-element animate-slide-in">
+            <div class="glass-card rounded-3xl p-8 sm:p-12 max-w-7xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl font-bold text-center text-green-200 mb-8">
+                    7-Day Lunar Forecast
+                </h2>
+                
+                <div id="forecast-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                    <!-- Forecast cards will be generated here -->
+                </div>
+                
+                <div class="text-center">
+                    <button id="hide-forecast-btn"
+                        class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-full shadow-md transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-gray-400">
+                        Hide Forecast
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Moon Phase Guide -->
+        <section class="mt-16 animate-slide-in">
+            <div class="glass-card rounded-3xl p-8 sm:p-12 max-w-6xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl font-bold text-center text-yellow-200 mb-8">
+                    🌕 Moon Phase Guide
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="moon-phase-card rounded-xl p-6 text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-5xl">🌑</div>
+                        <h3 class="text-lg font-bold text-blue-300 mb-2">New Moon</h3>
+                        <p class="text-gray-300 text-sm">New beginnings and fresh starts. Perfect for setting intentions.</p>
+                    </div>
+                    
+                    <div class="moon-phase-card rounded-xl p-6 text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-5xl">🌓</div>
+                        <h3 class="text-lg font-bold text-green-300 mb-2">First Quarter</h3>
+                        <p class="text-gray-300 text-sm">Time for action and decision-making. Overcome challenges.</p>
+                    </div>
+                    
+                    <div class="moon-phase-card rounded-xl p-6 text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-5xl">🌕</div>
+                        <h3 class="text-lg font-bold text-yellow-300 mb-2">Full Moon</h3>
+                        <p class="text-gray-300 text-sm">Peak energy and manifestation. Celebrate achievements.</p>
+                    </div>
+                    
+                    <div class="moon-phase-card rounded-xl p-6 text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center text-5xl">🌗</div>
+                        <h3 class="text-lg font-bold text-purple-300 mb-2">Last Quarter</h3>
+                        <p class="text-gray-300 text-sm">Release and let go. Clear space for new opportunities.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <script>
-        // SVG icons for different moon phases (as string literals)
-        const MoonPhaseIcons = {
-            'new-moon': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><circle cx="50" cy="50" r="40" fill="black"/></svg>`,
-            'full-moon': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/></svg>`,
-            'first-quarter': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><path d="M50 10 A40 40 0 0 1 50 90 L50 10 Z" fill="black"/></svg>`,
-            'last-quarter': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><path d="M50 10 A40 40 0 0 0 50 90 L50 10 Z" fill="black"/></svg>`,
-            'waxing-crescent': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><path d="M65 15 A40 40 0 0 1 65 85 Q35 50 65 15 Z" fill="black"/></svg>`,
-            'waning-crescent': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><path d="M35 15 A40 40 0 0 0 35 85 Q65 50 35 15 Z" fill="black"/></svg>`,
-            'waxing-gibbous': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><path d="M30 18 A40 40 0 0 0 30 82 Q60 50 30 18 Z" fill="black"/></svg>`,
-            'waning-gibbous': `<svg viewBox="0 0 100 100" class="w-24 h-24 lg:w-32 lg:h-32 text-gray-800 dark:text-gray-200"><circle cx="50" cy="50" r="40" fill="currentColor"/><path d="M70 18 A40 40 0 0 1 70 82 Q40 50 70 18 Z" fill="black"/></svg>`,
-        };
+        // Enhanced Moon Phase System
+        class LunarCalendar {
+            constructor() {
+                this.currentPhase = null;
+                this.init();
+            }
 
-        // Global variable to store today's moon phase name for LLM calls
-        let currentMoonPhaseName = '';
+            init() {
+                this.updateCurrentPhase();
+                this.setupEventListeners();
+            }
 
-        /**
-         * Function to calculate the moon phase for a given date.
-         * Uses a simplified algorithm based on the days since a known new moon epoch.
-         * @param {Date} date - The date for which to calculate the moon phase.
-         * @returns {{name: string, icon: string}} An object containing the moon phase name and its corresponding icon key.
-         */
-        const getMoonPhase = (date) => {
-            // New Moon on January 6, 2000, 18:14 UTC (Epoch)
-            const epoch = new Date("2000-01-06T18:14:00Z");
-            // Average length of a synodic month (lunar cycle)
-            const synodicMonth = 29.530588;
-
-            // Calculate the difference in milliseconds between the given date and the epoch
-            const diffMillis = date.getTime() - epoch.getTime();
-            // Convert milliseconds to days
-            let diffDays = diffMillis / (1000 * 60 * 60 * 24);
-
-            // Calculate the phase within the current synodic month
-            let phase = diffDays % synodicMonth;
-            // Ensure the phase is positive
-            const phaseAge = phase < 0 ? phase + synodicMonth : phase;
-
-            // Determine the moon phase name and icon based on the phase age
-            if (phaseAge < 1.84566) return { name: "New Moon", icon: "new-moon" };
-            if (phaseAge < 5.53699) return { name: "Waxing Crescent", icon: "waxing-crescent" };
-            if (phaseAge < 9.22831) return { name: "First Quarter", icon: "first-quarter" };
-            if (phaseAge < 12.91963) return { name: "Waxing Gibbous", icon: "waxing-gibbous" };
-            if (phaseAge < 16.61096) return { name: "Full Moon", icon: "full-moon" };
-            if (phaseAge < 20.30228) return { name: "Waning Gibbous", icon: "waning-gibbous" };
-            if (phaseAge < 23.99361) return { name: "Last Quarter", icon: "last-quarter" };
-            if (phaseAge < 27.68493) return { name: "Waning Crescent", icon: "waning-crescent" };
-            return { name: "New Moon", icon: "new-moon" }; // Falls back to New Moon for the end of the cycle
-        };
-
-        /**
-         * Helper function to format dates.
-         * @param {Date} date - The date object to format.
-         * @returns {string} The formatted date string (e.g., "Mon, Aug 26").
-         */
-        const formatDate = (date) => {
-            return new Intl.DateTimeFormat('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-            }).format(date);
-        };
-
-        /**
-         * Makes an API call to Gemini with exponential backoff.
-         * @param {string} prompt - The text prompt for the LLM.
-         * @param {number} retries - Current retry count.
-         * @param {number} delay - Current delay for exponential backoff.
-         * @returns {Promise<string>} The generated text from the LLM.
-         */
-        const callGeminiApiWithBackoff = async (prompt, retries = 0, delay = 1000) => {
-            const maxRetries = 5; // Maximum number of retries
-            const apiKey = ""; // API key will be provided by Canvas runtime if empty
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    // If response is not OK, it might be a rate limit or server error
-                    if (response.status === 429 && retries < maxRetries) { // Too Many Requests
-                        await new Promise(res => setTimeout(res, delay));
-                        return callGeminiApiWithBackoff(prompt, retries + 1, delay * 2); // Exponential backoff
-                    }
-                    throw new Error(`API error: ${response.status} ${response.statusText}`);
-                }
-
-                const result = await response.json();
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    return result.candidates[0].content.parts[0].text;
+            // More accurate moon phase calculation
+            getMoonPhase(date) {
+                const epoch = new Date("2000-01-06T18:14:00Z");
+                const synodicMonth = 29.530588853;
+                const diffDays = (date.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24);
+                const phaseAge = ((diffDays % synodicMonth) + synodicMonth) % synodicMonth;
+                
+                // Calculate illumination percentage
+                const illumination = Math.round(50 * (1 - Math.cos((phaseAge / synodicMonth) * 2 * Math.PI)) * 100) / 100;
+                
+                // Determine phase
+                let phase, nextPhase;
+                if (phaseAge < 1.84566) {
+                    phase = { name: "New Moon", icon: "🌑", class: "new-moon" };
+                    nextPhase = "Waxing Crescent";
+                } else if (phaseAge < 5.53699) {
+                    phase = { name: "Waxing Crescent", icon: "🌒", class: "waxing-crescent" };
+                    nextPhase = "First Quarter";
+                } else if (phaseAge < 9.22831) {
+                    phase = { name: "First Quarter", icon: "🌓", class: "first-quarter" };
+                    nextPhase = "Waxing Gibbous";
+                } else if (phaseAge < 12.91963) {
+                    phase = { name: "Waxing Gibbous", icon: "🌔", class: "waxing-gibbous" };
+                    nextPhase = "Full Moon";
+                } else if (phaseAge < 16.61096) {
+                    phase = { name: "Full Moon", icon: "🌕", class: "full-moon" };
+                    nextPhase = "Waning Gibbous";
+                } else if (phaseAge < 20.30228) {
+                    phase = { name: "Waning Gibbous", icon: "🌖", class: "waning-gibbous" };
+                    nextPhase = "Last Quarter";
+                } else if (phaseAge < 23.99361) {
+                    phase = { name: "Last Quarter", icon: "🌗", class: "last-quarter" };
+                    nextPhase = "Waning Crescent";
                 } else {
-                    throw new Error('Unexpected API response structure or no content.');
+                    phase = { name: "Waning Crescent", icon: "🌘", class: "waning-crescent" };
+                    nextPhase = "New Moon";
                 }
-            } catch (error) {
-                console.error('Error in Gemini API call:', error);
-                throw error; // Re-throw to be handled by the calling function
-            }
-        };
 
-
-        /**
-         * Updates the display for today's moon phase.
-         */
-        const updateTodayMoonPhase = () => {
-            const today = new Date();
-            const phase = getMoonPhase(today);
-            currentMoonPhaseName = phase.name; // Store for LLM calls
-
-            document.getElementById('loading-today-phase').classList.add('hidden-element');
-            document.getElementById('today-moon-phase-content').classList.remove('hidden-element');
-
-            document.getElementById('today-date').textContent = formatDate(today);
-            document.getElementById('today-moon-icon').innerHTML = MoonPhaseIcons[phase.icon];
-            document.getElementById('today-moon-name').textContent = phase.name;
-
-            // Enable LLM buttons once moon phase is loaded
-            document.getElementById('generate-insight-btn').disabled = false;
-            document.getElementById('generate-story-btn').disabled = false;
-        };
-
-        /**
-         * Handles the click event for generating moon phase insight.
-         */
-        const handleGenerateInsight = async () => {
-            const insightBtn = document.getElementById('generate-insight-btn');
-            const insightText = document.getElementById('moon-phase-insight');
-
-            insightBtn.disabled = true;
-            insightBtn.textContent = 'Generating...';
-            insightText.textContent = ''; // Clear previous insight
-            insightText.classList.add('hidden-element'); // Hide until content is ready
-
-            const prompt = `Give me a fun fact or a piece of interesting folklore about the "${currentMoonPhaseName}" moon phase. Keep it concise, around 2-3 sentences.`;
-
-            try {
-                const text = await callGeminiApiWithBackoff(prompt);
-                insightText.textContent = text;
-                insightText.classList.remove('hidden-element');
-            } catch (error) {
-                insightText.textContent = 'Could not generate insight. Please try again.';
-                insightText.classList.remove('hidden-element');
-            } finally {
-                insightBtn.disabled = false;
-                insightBtn.textContent = 'Moon Phase Insight ✨';
-            }
-        };
-
-        /**
-         * Handles the click event for generating a moon phase story.
-         */
-        const handleGenerateStory = async () => {
-            const storyBtn = document.getElementById('generate-story-btn');
-            const storyText = document.getElementById('moon-phase-story');
-
-            storyBtn.disabled = true;
-            storyBtn.textContent = 'Weaving Tale...';
-            storyText.textContent = ''; // Clear previous story
-            storyText.classList.add('hidden-element'); // Hide until content is ready
-
-            const prompt = `Write a very short, imaginative story (around 4-5 sentences) inspired by the "${currentMoonPhaseName}" moon phase. Focus on wonder and mystery.`;
-
-            try {
-                const text = await callGeminiApiWithBackoff(prompt);
-                storyText.textContent = text;
-                storyText.classList.remove('hidden-element');
-            } catch (error) {
-                storyText.textContent = 'Could not generate story. Please try again.';
-                storyText.classList.remove('hidden-element');
-            } finally {
-                storyBtn.disabled = false;
-                storyBtn.textContent = 'Moon Phase Story ✨';
-            }
-        };
-
-        /**
-         * Handles the click event for showing the next 7 days' moon phases.
-         */
-        const handleShowNext7Days = () => {
-            const next7DaysSection = document.getElementById('next-7-days-section');
-            const next7DaysGrid = document.getElementById('next-7-days-grid');
-            const showBtn = document.getElementById('show-next-7-days-btn');
-
-            next7DaysGrid.innerHTML = ''; // Clear previous content
-
-            for (let i = 0; i < 7; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() + i + 1); // Get next day, next + 1, etc.
-                const phase = getMoonPhase(date);
-
-                const phaseDiv = document.createElement('div');
-                phaseDiv.className = "flex flex-col items-center justify-center p-4 bg-gray-800/70 rounded-xl shadow-md transform hover:scale-105 transition-all duration-300 border border-gray-700";
-                phaseDiv.innerHTML = `
-                    <p class="text-md sm:text-lg font-medium text-gray-300 mb-2">${formatDate(date)}</p>
-                    ${MoonPhaseIcons[phase.icon]}
-                    <p class="text-md sm:text-xl font-bold text-center text-purple-200 mt-2">
-                        ${phase.name}
-                    </p>
-                `;
-                next7DaysGrid.appendChild(phaseDiv);
+                return { 
+                    ...phase, 
+                    age: Math.round(phaseAge * 10) / 10, 
+                    illumination: illumination,
+                    nextPhase: nextPhase
+                };
             }
 
-            next7DaysSection.classList.remove('hidden-element');
-            showBtn.classList.add('hidden-element');
-        };
+            /**
+             * Creates a visually accurate moon phase using two overlapping circles.
+             * One circle represents the illuminated part, the other acts as a shadow.
+             * @param {Object} phaseData - Contains phase name, illumination, and age.
+             */
+            createMoonVisual(phaseData) {
+                const visualContainer = document.getElementById('current-moon-visual');
+                visualContainer.innerHTML = ''; // Clear previous visual
 
-        /**
-         * Handles the click event for hiding the next 7 days' moon phases.
-         */
-        const handleHideNext7Days = () => {
-            const next7DaysSection = document.getElementById('next-7-days-section');
-            const showBtn = document.getElementById('show-next-7-days-btn');
+                const lightSide = document.createElement('div');
+                lightSide.className = 'moon-light-side'; // Styles for the illuminated part
 
-            next7DaysSection.classList.add('hidden-element');
-            showBtn.classList.remove('hidden-element');
-        };
+                const shadowOverlay = document.createElement('div');
+                shadowOverlay.className = 'moon-shadow-overlay'; // Styles for the shadow part
 
-        // Attach event listeners when the DOM is fully loaded
+                // Calculate shadow position based on illumination
+                const illumination = phaseData.illumination / 100; // 0 to 1
+                let transformValue = '';
+
+                if (illumination === 0) { // New Moon
+                    shadowOverlay.style.transform = 'translateX(0%)';
+                } else if (illumination === 1) { // Full Moon
+                    shadowOverlay.style.display = 'none'; // No shadow
+                } else {
+                    if (phaseData.name.includes("Waxing")) {
+                        // Waxing: Shadow moves from right to left
+                        const offset = (1 - illumination) * 100; // How much shadow covers
+                        shadowOverlay.style.transform = `translateX(${offset}%)`;
+                        shadowOverlay.style.right = 'auto'; // Ensure it starts from the left edge of the container
+                    } else if (phaseData.name.includes("Waning")) {
+                        // Waning: Shadow moves from left to right
+                        const offset = (1 - illumination) * 100; // How much shadow covers
+                        shadowOverlay.style.transform = `translateX(-${offset}%)`;
+                        shadowOverlay.style.left = 'auto'; // Ensure it starts from the right edge of the container
+                    }
+                    // For Quarter moons, simple offset is enough for visual representation
+                    if (phaseData.name.includes("First Quarter")) {
+                        shadowOverlay.style.transform = `translateX(50%)`;
+                    } else if (phaseData.name.includes("Last Quarter")) {
+                        shadowOverlay.style.transform = `translateX(-50%)`;
+                    }
+                }
+                
+                // Add the light side first, then the shadow overlay
+                visualContainer.appendChild(lightSide);
+                visualContainer.appendChild(shadowOverlay);
+
+                // Adjust shadow based on illumination and phase for a more accurate visual
+                // This is a simplified approach, a more complex SVG mask would be ideal for perfect curves
+                if (illumination < 1 && illumination > 0) {
+                    if (phaseData.name.includes("Waxing")) { // Light from right
+                        // Shadow needs to cover the left part
+                        shadowOverlay.style.left = `calc(-50% + ${illumination * 50}%)`; // Adjust x position
+                        shadowOverlay.style.width = `calc(100% - ${illumination * 100}%)`;
+                    } else if (phaseData.name.includes("Waning")) { // Light from left
+                        // Shadow needs to cover the right part
+                        shadowOverlay.style.left = `calc(50% - ${illumination * 50}%)`; // Adjust x position
+                        shadowOverlay.style.width = `calc(100% - ${illumination * 100}%)`;
+                    }
+                }
+
+
+                 // Refined visual logic for crescents and gibbous phases using a second moving circle
+                const lunarSurface = document.createElement('div');
+                lunarSurface.className = 'absolute inset-0 rounded-full bg-gradient-to-br from-gray-100 to-gray-300';
+                visualContainer.appendChild(lunarSurface);
+
+                const terminator = document.createElement('div');
+                terminator.className = 'absolute inset-0 rounded-full bg-gray-900'; // Dark side
+                visualContainer.appendChild(terminator);
+
+                // Calculate position for the terminator (shadow line)
+                const age = phaseData.age;
+                const radius = 50; // percentage radius
+                let terminatorPosition = 0; // x-offset from center
+
+                if (age >= 0 && age < 14.76) { // Waxing phases (New Moon to Full Moon)
+                    // Shadow moves from right to left, revealing more light on the right
+                    terminatorPosition = 100 - (age / 14.76) * 200; // Moves from 100% to -100%
+                } else { // Waning phases (Full Moon to New Moon)
+                    // Shadow moves from left to right, revealing more light on the left
+                    terminatorPosition = -100 + ((age - 14.76) / 14.76) * 200; // Moves from -100% to 100%
+                }
+
+                // Apply the clip-path for crescent/gibbous appearance
+                // This creates a curved edge by overlapping two circles
+                // For simplicity, we're using a single moving circle as an overlay
+                // More complex shapes might require SVG or Canvas
+                
+                // For a more accurate visual, using a mask or two circles that move is better.
+                // Here's a simplified approach with one light circle and one dark moving circle (terminator)
+                terminator.style.left = `${terminatorPosition / 2}%`; // Position the center of the terminator
+                terminator.style.width = `100%`;
+                terminator.style.height = `100%`;
+                terminator.style.transform = `translateX(${terminatorPosition}%)`; // Shift to create the effect
+
+                // Clip path for quarter moons (half circle)
+                if (phaseData.name === "First Quarter") {
+                    terminator.style.clipPath = 'polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)';
+                    terminator.style.transform = 'translateX(0%)';
+                } else if (phaseData.name === "Last Quarter") {
+                    terminator.style.clipPath = 'polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%)';
+                    terminator.style.transform = 'translateX(0%)';
+                } else if (phaseData.name === "New Moon") {
+                    lunarSurface.style.display = 'none'; // Completely dark
+                    terminator.style.clipPath = 'none'; // Fully dark
+                    terminator.style.transform = 'translateX(0%)';
+                    terminator.style.backgroundColor = '#2c2c3e'; // Ensure it's dark
+                } else if (phaseData.name === "Full Moon") {
+                    terminator.style.display = 'none'; // Completely bright
+                } else if (phaseData.name.includes("Crescent")) {
+                    // For crescent, we need a crescent-shaped shadow
+                    // This is hard with simple CSS, a simpler approach is to use a radial gradient or two circles
+                    // Let's use a simpler clip path for demonstration, or stick to emoji for full accuracy.
+                    // For now, the transform is a good approximation.
+                    terminator.style.backgroundColor = 'rgba(0,0,0,0.7)'; // Dimming for shadow
+                }
+                 
+                visualContainer.innerHTML = ''; // Clear previous
+                visualContainer.appendChild(lunarSurface); // Base moon
+                visualContainer.appendChild(terminator); // Shadow
+            }
+
+
+            updateCurrentPhase() {
+                const today = new Date();
+                this.currentPhase = this.getMoonPhase(today);
+                
+                // Update UI elements
+                document.getElementById('current-date').textContent = today.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                document.getElementById('current-phase-name').textContent = this.currentPhase.name;
+                document.getElementById('current-illumination').textContent = this.currentPhase.illumination + '%';
+                document.getElementById('current-age').textContent = this.currentPhase.age;
+                document.getElementById('next-phase').textContent = this.currentPhase.nextPhase;
+                
+                this.createMoonVisual(this.currentPhase);
+            }
+
+            generateForecast() {
+                const grid = document.getElementById('forecast-grid');
+                grid.innerHTML = '';
+                
+                for (let i = 1; i <= 7; i++) {
+                    const date = new Date();
+                    date.setDate(date.getDate() + i);
+                    const phaseData = this.getMoonPhase(date);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'moon-phase-card rounded-xl p-6 text-center transform transition-all duration-300 hover:scale-105';
+                    
+                    card.innerHTML = `
+                        <div class="text-lg font-semibold text-blue-200 mb-3">
+                            ${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </div>
+                        <div class="text-4xl mb-3">${phaseData.icon}</div>
+                        <h3 class="text-lg font-bold text-white mb-2">${phaseData.name}</h3>
+                        <div class="text-sm text-gray-300">
+                            <p>Illumination: ${phaseData.illumination}%</p>
+                            <p>Age: ${phaseData.age} days</p>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(card);
+                    
+                    // Add staggered animation
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, i * 100);
+                }
+            }
+
+            // Simplified content generation (no Gemini API calls)
+            async generateContent(type) {
+                const responses = {
+                    insight: {
+                        'New Moon': 'The New Moon represents new beginnings and fresh starts. In many cultures, it\'s considered the perfect time to set intentions and plant seeds for future growth. This phase encourages introspection and planning.',
+                        'Waxing Crescent': 'The Waxing Crescent symbolizes growth and momentum. Ancient farmers would plant crops during this phase, believing the growing light would nurture their seeds. It\'s a time for taking action on your intentions.',
+                        'First Quarter': 'The First Quarter moon brings challenges and decision-making opportunities. This phase tests your resolve and pushes you to overcome obstacles. Many traditions see this as a time of strength and determination.',
+                        'Waxing Gibbous': 'The Waxing Gibbous phase is about refinement and adjustment. As the moon approaches fullness, it\'s time to fine-tune your efforts and prepare for manifestation. Patience and persistence are key.',
+                        'Full Moon': 'The Full Moon is the peak of lunar energy, associated with completion and manifestation. Many cultures celebrate festivals during this time. It\'s when emotions run high and magic is believed to be strongest.',
+                        'Waning Gibbous': 'The Waning Gibbous phase encourages gratitude and sharing. After the full moon\'s intensity, this phase brings reflection on achievements and sharing wisdom gained. It\'s a time of teaching and giving.',
+                        'Last Quarter': 'The Last Quarter moon symbolizes release and letting go. This phase helps you identify what no longer serves you and provides the strength to release it. It\'s about forgiveness and clearing space.',
+                        'Waning Crescent': 'The Waning Crescent is the final phase before renewal. This quiet time encourages rest, reflection, and preparation for the next cycle. Many traditions see this as a time for healing and wisdom.'
+                    },
+                    story: {
+                        'New Moon': 'In the quiet darkness of the new moon, Luna the Moon Goddess closed her eyes and dreamed of possibilities. With each breath, she planted seeds of light in the cosmic void, knowing that in time, they would bloom into brilliant stars that would guide lost travelers home.',
+                        'Waxing Crescent': 'As the first sliver of moonlight appeared, young Celeste discovered a magical silver coin in her garden. Each night, as the moon grew brighter, the coin revealed new powers, teaching her that growth comes to those who believe in their dreams.',
+                        'First Quarter': 'The half-moon hung like a celestial balance scale in the sky. Below, two kingdoms stood at a crossroads, and wise Queen Artemisia knew that the moon\'s perfect symmetry held the key to bringing peace between the warring lands.',
+                        'Waxing Gibbous': 'As the moon swelled with light, the enchanted lighthouse keeper polished his beacon one final time. Tomorrow, the full moon would arrive, and ships from distant lands would follow his light to discover the magical harbor hidden in the mists.',
+                        'Full Moon': 'On this night of the full moon, the Silver Wolf sang her ancient song to the stars. Her melody awakened the sleeping flowers, which bloomed in silver and blue, creating a pathway of light for the Moon Dancers to celebrate until dawn.',
+                        'Waning Gibbous': 'The wise old owl shared her stories with the forest creatures as the generous moon began to fade. Each tale she told glowed like moonbeams, carrying precious wisdom that would light their way through the darker nights ahead.',
+                        'Last Quarter': 'Under the last quarter moon, Captain Marina released her collection of bottled tears into the ocean. As each bottle sank into the waves, her sorrows transformed into pearls of wisdom, making room in her heart for new adventures.',
+                        'Waning Crescent': 'In the quiet hours before dawn, the Moon Whisperer gathered the last silver threads of moonlight. She wove them into dreams for children around the world, ensuring they would sleep peacefully until the moon returned to full brightness.'
+                    }
+                };
+                
+                // Simulate async call
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve(responses[type][this.currentPhase.name] || 'The moon holds many mysteries waiting to be discovered.');
+                    }, 500); // Simulate network delay
+                });
+            }
+
+            async handleInsight() {
+                const btn = document.getElementById('insight-btn');
+                const content = document.getElementById('insight-content');
+                const text = document.getElementById('insight-text');
+                
+                btn.disabled = true;
+                btn.textContent = 'Channeling lunar wisdom...';
+                
+                try {
+                    const insight = await this.generateContent('insight');
+                    text.textContent = insight;
+                    content.classList.remove('hidden-element');
+                    content.classList.add('animate-slide-in');
+                } catch (error) {
+                    text.textContent = 'The moon\'s wisdom is temporarily veiled. Please try again.';
+                    content.classList.remove('hidden-element');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '✨ Moon Insight';
+                }
+            }
+
+            async handleStory() {
+                const btn = document.getElementById('story-btn');
+                const content = document.getElementById('story-content');
+                const text = document.getElementById('story-text');
+                
+                btn.disabled = true;
+                btn.textContent = 'Weaving lunar tale...';
+                
+                try {
+                    const story = await this.generateContent('story');
+                    text.textContent = story;
+                    content.classList.remove('hidden-element');
+                    content.classList.add('animate-slide-in');
+                } catch (error) {
+                    text.textContent = 'The moon\'s stories are temporarily hidden in shadow. Please try again.';
+                    content.classList.remove('hidden-element');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '📚 Lunar Story';
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('insight-btn').addEventListener('click', () => this.handleInsight());
+                document.getElementById('story-btn').addEventListener('click', () => this.handleStory());
+                
+                document.getElementById('toggle-forecast-btn').addEventListener('click', () => {
+                    const section = document.getElementById('forecast-section');
+                    const btn = document.getElementById('toggle-forecast-btn');
+                    
+                    if (section.classList.contains('hidden-element')) {
+                        this.generateForecast();
+                        section.classList.remove('hidden-element');
+                        btn.textContent = '🔮 Hide Lunar Forecast';
+                    } else {
+                        section.classList.add('hidden-element');
+                        btn.textContent = '🔮 View 7-Day Lunar Forecast';
+                    }
+                });
+                
+                document.getElementById('hide-forecast-btn').addEventListener('click', () => {
+                    document.getElementById('forecast-section').classList.add('hidden-element');
+                    document.getElementById('toggle-forecast-btn').textContent = '🔮 View 7-Day Lunar Forecast';
+                });
+            }
+        }
+
+        // Initialize the Lunar Calendar
         document.addEventListener('DOMContentLoaded', () => {
-            updateTodayMoonPhase();
-            document.getElementById('show-next-7-days-btn').addEventListener('click', handleShowNext7Days);
-            document.getElementById('hide-next-7-days-btn').addEventListener('click', handleHideNext7Days);
-            document.getElementById('generate-insight-btn').addEventListener('click', handleGenerateInsight);
-            document.getElementById('generate-story-btn').addEventListener('click', handleGenerateStory);
+            const calendar = new LunarCalendar();
+            
+            // Add periodic updates every hour
+            setInterval(() => {
+                calendar.updateCurrentPhase();
+            }, 3600000);
+        });
+
+        // Additional interactive features
+        class LunarEffects {
+            constructor() {
+                this.setupParticles();
+                this.setupHoverEffects();
+            }
+
+            setupParticles() {
+                // Create floating particles
+                const particleContainer = document.createElement('div');
+                particleContainer.className = 'fixed inset-0 pointer-events-none z-0';
+                document.body.appendChild(particleContainer);
+
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'absolute w-1 h-1 bg-white rounded-full opacity-30';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 4 + 's';
+                    particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    particle.classList.add('animate-twinkle');
+                    particleContainer.appendChild(particle);
+                }
+            }
+
+            setupHoverEffects() {
+                // Add interactive hover effects to cards
+                const cards = document.querySelectorAll('.moon-phase-card, .glass-card');
+                cards.forEach(card => {
+                    card.addEventListener('mouseenter', function() {
+                        this.style.transform = this.style.transform + ' scale(1.02)';
+                    });
+                    
+                    card.addEventListener('mouseleave', function() {
+                        this.style.transform = this.style.transform.replace(' scale(1.02)', '');
+                    });
+                });
+            }
+        }
+
+        // Weather and location integration
+        class LunarLocation {
+            constructor() {
+                this.setupLocationFeatures();
+            }
+
+            async setupLocationFeatures() {
+                try {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => this.handleLocationSuccess(position),
+                            (error) => this.handleLocationError(error)
+                        );
+                    } else {
+                        console.log('Geolocation not supported by this browser.');
+                    }
+                } catch (error) {
+                    console.error('Error setting up location features:', error);
+                }
+            }
+
+            handleLocationSuccess(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                // Add moonrise/moonset calculation
+                this.calculateMoonTimes(lat, lon);
+            }
+
+            handleLocationError(error) {
+                console.warn('Location access denied or error:', error.message);
+                // Optionally display a message to the user
+            }
+
+            calculateMoonTimes(lat, lon) {
+                // Simplified moonrise/moonset calculation
+                const today = new Date();
+                const moonrise = new Date(today);
+                const moonset = new Date(today);
+                
+                // Approximate times (would use actual astronomical library in production)
+                // For a more accurate result, consider using an external library like "suncalc"
+                moonrise.setHours(18, 30, 0, 0); // Example: 6:30 PM
+                moonset.setHours(6, 30, 0, 0);   // Example: 6:30 AM
+                
+                this.displayMoonTimes(moonrise, moonset);
+            }
+
+            displayMoonTimes(moonrise, moonset) {
+                const timeInfo = document.createElement('div');
+                timeInfo.className = 'phase-info-card rounded-xl p-6 mt-6 animate-slide-in';
+                timeInfo.innerHTML = `
+                    <h4 class="text-xl font-bold text-cyan-300 mb-3 flex items-center gap-2">
+                        <span class="text-2xl">🌅</span> Moon Times (Local)
+                    </h4>
+                    <div class="flex justify-between text-gray-200">
+                        <div>
+                            <p class="font-semibold">Moonrise</p>
+                            <p class="text-cyan-300">${moonrise.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Moonset</p>
+                            <p class="text-orange-300">${moonset.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('dynamic-content').appendChild(timeInfo);
+            }
+        }
+
+        // Lunar calendar features
+        class LunarCalendarFeatures {
+            constructor() {
+                this.addMonthlyView();
+                this.addExportFeature();
+            }
+
+            addMonthlyView() {
+                // Add monthly calendar view button
+                const monthlyBtn = document.createElement('button');
+                monthlyBtn.id = 'monthly-view-btn';
+                monthlyBtn.className = 'px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-indigo-300 ml-4';
+                monthlyBtn.textContent = '📅 Monthly View';
+                
+                // Append next to the toggle forecast button
+                const toggleForecastParent = document.getElementById('toggle-forecast-btn').parentNode;
+                if (toggleForecastParent) {
+                    toggleForecastParent.appendChild(monthlyBtn);
+                }
+            }
+
+            showMonthlyView() {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                modal.innerHTML = `
+                    <div class="glass-card rounded-3xl p-8 max-w-4xl w-full max-h-screen overflow-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-bold text-blue-200">Monthly Lunar Calendar</h3>
+                            <button id="close-monthly" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
+                        </div>
+                        <div id="monthly-calendar" class="grid grid-cols-7 gap-2 text-center">
+                            <!-- Calendar will be generated here -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                this.generateMonthlyCalendar();
+                
+                document.getElementById('close-monthly').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            }
+
+            generateMonthlyCalendar() {
+                const calendarElement = document.getElementById('monthly-calendar');
+                if (!calendarElement) return; // Ensure element exists
+
+                calendarElement.innerHTML = ''; // Clear previous content
+
+                const today = new Date();
+                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                
+                // Days of week header
+                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                daysOfWeek.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'font-bold text-gray-300 p-2';
+                    dayHeader.textContent = day;
+                    calendarElement.appendChild(dayHeader);
+                });
+                
+                // Empty cells for days before month start
+                for (let i = 0; i < firstDayOfMonth.getDay(); i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'p-2';
+                    calendarElement.appendChild(emptyCell);
+                }
+                
+                // Calendar days with moon phases
+                const lunarCalendar = new LunarCalendar(); // Re-instantiate or pass existing
+                for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+                    const cellDate = new Date(today.getFullYear(), today.getMonth(), day);
+                    const phase = lunarCalendar.getMoonPhase(cellDate);
+                    
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'moon-phase-card rounded-lg p-3 text-center hover:scale-105 transition-all duration-200 cursor-pointer'; // Added cursor-pointer
+                    if (cellDate.toDateString() === today.toDateString()) {
+                        dayCell.classList.add('ring-2', 'ring-blue-400');
+                    }
+                    
+                    dayCell.innerHTML = `
+                        <div class="font-semibold text-white mb-1">${day}</div>
+                        <div class="text-lg">${phase.icon}</div>
+                        <div class="text-xs text-gray-300 mt-1">${phase.illumination}%</div>
+                    `;
+                    
+                    calendarElement.appendChild(dayCell);
+                }
+            }
+
+            addExportFeature() {
+                const exportBtn = document.createElement('button');
+                exportBtn.className = 'px-4 py-2 bg-gradient-to-r from-pink-500 to-red-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-pink-300 ml-4';
+                exportBtn.textContent = '📥 Export Data';
+                
+                const monthlyViewParent = document.getElementById('monthly-view-btn').parentNode;
+                if (monthlyViewParent) {
+                    monthlyViewParent.appendChild(exportBtn);
+                }
+            }
+
+            exportLunarData() {
+                const lunarCalendar = new LunarCalendar();
+                const today = new Date();
+                const data = [];
+                
+                // Generate data for next 30 days
+                for (let i = 0; i < 30; i++) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() + i);
+                    const phase = lunarCalendar.getMoonPhase(date);
+                    
+                    data.push({
+                        date: date.toISOString().split('T')[0],
+                        phase: phase.name,
+                        illumination: phase.illumination,
+                        age: phase.age
+                    });
+                }
+                
+                // Create and download CSV
+                const csv = this.convertToCSV(data);
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', 'lunar_calendar_data.csv');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            convertToCSV(data) {
+                if (data.length === 0) return '';
+                const headers = Object.keys(data[0]);
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(row => headers.map(header => `"${String(row[header]).replace(/"/g, '""')}"`).join(',')) // Handle commas and quotes in data
+                ].join('\n');
+                
+                return csvContent;
+            }
+        }
+
+        // Initialize all features
+        document.addEventListener('DOMContentLoaded', () => {
+            const lunarCalendarInstance = new LunarCalendar(); // Store instance for monthly view
+            const lunarEffectsInstance = new LunarEffects();
+            const lunarLocationInstance = new LunarLocation();
+            const lunarCalendarFeaturesInstance = new LunarCalendarFeatures();
+
+            // Event listener for monthly view button (needs to be attached after creation)
+            const monthlyViewBtn = document.getElementById('monthly-view-btn');
+            if (monthlyViewBtn) {
+                monthlyViewBtn.addEventListener('click', () => lunarCalendarFeaturesInstance.showMonthlyView());
+            }
+
+            // Event listener for export button (needs to be attached after creation)
+            const exportBtn = monthlyViewBtn ? monthlyViewBtn.nextElementSibling : null; // Assuming export button is next to monthly view btn
+            if (exportBtn && exportBtn.textContent.includes('Export Data')) {
+                 exportBtn.addEventListener('click', () => lunarCalendarFeaturesInstance.exportLunarData());
+            }
         });
     </script>
 </body>
